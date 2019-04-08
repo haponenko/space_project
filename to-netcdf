@@ -1,0 +1,43 @@
+#!/bin/bash
+echo What dir path?
+
+#read dir_path;
+#dir_path="/Volumes/EXTERNAL/grib";
+dir_path="/Users/haponenko/Documents/space_project-master/data/nc";
+
+declare -a shortNames
+declare -a longNames
+
+shortNames=( [0]="O3" [4]="CO" [5]="NO2" );
+longNames=( [0]="Ozone" [4]="Carbon monoxide" [5]="Nitrogen Dioxide" );
+
+for fullfile in $dir_path/*.grib2; do
+	filename="${fullfile%.*}";
+
+	#Get metadata from the GRIB2 file
+	metadata=(`grib_get -p constituentType,parameterNumber,date $filename.grib2 | head -n 1`)
+    
+    #Transform to "height" type
+    grib_set -s typeOfLevel=heightAboveGround $filename.grib2 $filename.t.h.grib2
+    
+    #Reorder the GRIB messages by time and elevation ascending order
+    grib_copy -B "stepRange:i asc, level:i asc" $filename.t.h.grib2 $filename.t.o.grib2
+    
+    #Convert GRIB2 to NetCDF
+    cdo -z zip1 -f nc4 copy $filename.t.o.grib2 $filename.t.nc
+    
+    #Rename variable
+    ncrename -v param0.20.0,"${shortNames[$metadata]}" $filename.t.nc $filename.t.rn.nc
+    
+    #Add metadata for name and units
+    ncatted -a long_name,"${shortNames[$metadata]}",c,c,"${longNames[$metadata]}" -a units,"${shortNames[$metadata]}",c,c,"kg.m^-3" $filename.t.rn.nc
+    
+    #Add metadata for "date"
+    ncatted -a long_name,time,c,c,"FORECAST time from ${metadata[2]}" $filename.t.rn.nc
+    
+    #Reverse latitude
+    ncpdq -a '-lat' $filename.t.rn.nc $filename.nc
+    
+    #Delete temporary files
+    rm $filename.t.*
+done
