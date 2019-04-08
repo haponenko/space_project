@@ -27,3 +27,5 @@ docker run --rm -p 8888:8888 -p 4040:4040 -e JUPYTER_ENABLE_LAB=yes -v $(pwd):/c
 ```  
 And navigate to [0.0.0.0:8888](0.0.0.0:8888).  
 Note: do not forget your token.  
+
+nc data: https://drive.google.com/drive/u/0/folders/1j95WYrZiWjknKwt7VjZQNIKwu6HhGkNU
