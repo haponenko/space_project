@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#dir_path="/Volumes/EXTERNAL/grib";
+dir_path="/Users/haponenko/Documents/space_project-master/data/shp";
+
+for fullfile in $dir_path/*.shp; do
+	filename="${fullfile%.*}";
+
+	ogr2ogr -clipsrc -25 30 45 70 $filename.crop.shp $filename.shp
+done
